@@ -30,8 +30,9 @@ public class Test {
                 String requestID = DistributeLock.getInstance().lock(TEST_REDIS_LOCK_KEY);
                 System.out.println("获得锁，开始执行任务 requestID=" + requestID + "i=" + currentThreadNum);
 
-                if(currentThreadNum % 3 == 0){
-                    throw new RuntimeException("模拟 宕机事件");
+                if(currentThreadNum == 1){
+                    System.out.println("模拟 宕机事件 不释放锁，直接返回 currentThreadNum=" + currentThreadNum);
+                    return;
                 }
 
                 try {
