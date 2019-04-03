@@ -29,6 +29,11 @@ public class Test {
                 System.out.println("线程尝试获得锁 i=" + currentThreadNum);
                 String requestID = DistributeLock.getInstance().lock(TEST_REDIS_LOCK_KEY);
                 System.out.println("获得锁，开始执行任务 requestID=" + requestID + "i=" + currentThreadNum);
+
+                if(currentThreadNum % 3 == 0){
+                    throw new RuntimeException("模拟 宕机事件");
+                }
+
                 try {
                     // 休眠完毕
                     Thread.sleep(10000);

@@ -29,7 +29,7 @@ public class DistributeLock {
     /**
      * 默认过期时间 单位：秒
      * */
-    private static final int DEFAULT_EXPIRE_TIME_SECOND = 60;
+    private static final int DEFAULT_EXPIRE_TIME_SECOND = 30;
     /**
      * 默认加锁重试时间 单位：毫秒
      * */
