@@ -41,7 +41,7 @@ public class RedisClient {
     private void init(){
         JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
         jedisPoolConfig.setMaxTotal(10);
-        pool = new JedisPool(jedisPoolConfig, "localhost",6379);
+        pool = new JedisPool(jedisPoolConfig, "10.46.129.151",6379);
         System.out.println("连接池初始化成功");
     }
 

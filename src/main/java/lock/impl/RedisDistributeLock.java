@@ -1,3 +1,6 @@
+package lock.impl;
+
+import lock.api.DistributeLock;
 import redis.RedisClient;
 
 import java.util.Collections;
@@ -6,16 +9,17 @@ import java.util.UUID;
 
 /**
  * @Author xiongyx
- * @Date 2019/4/3
- *
- * 分布式锁
+ * @Date 2019/4/8
  */
-public class DistributeLock {
+public final class RedisDistributeLock implements DistributeLock {
 
-    private static DistributeLock instance = new DistributeLock();
+    private static DistributeLock instance = new RedisDistributeLock();
 
     private static final String NX = "NX";
     private static final String EX = "EX";
+
+    private RedisDistributeLock() {
+    }
 
     /**
      * 持有锁 成功标识
@@ -45,10 +49,37 @@ public class DistributeLock {
         return instance;
     }
 
-    /**
-     * 加锁操作
-     * */
-    public String lock(String lockKey){
+    @Override
+    public String lock(String lockKey) {
+        String uuid = UUID.randomUUID().toString();
+        String result = RedisClient.getInstance().set(lockKey, uuid, NX, EX, DEFAULT_EXPIRE_TIME_SECOND);
+
+        // 如果加锁成功
+        if(ADD_LOCK_SUCCESS.equalsIgnoreCase(result)){
+            return uuid;
+        }else{
+            return null;
+        }
+    }
+
+    @Override
+    public boolean unlock(String lockKey, String requestID) {
+        String script = "if redis.call('get', KEYS[1]) == ARGV[1] "
+            + "then return redis.call('del', KEYS[1]) "
+            + "else return 0 end";
+
+        Object result = RedisClient.getInstance().eval(script, Collections.singletonList(lockKey), Collections.singletonList(requestID));
+
+        // 释放锁没有失败 = 释放锁成功
+        if(!RELEASE_LOCK_FAIL.equals(result)) {
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    @Override
+    public String lockAndRetry(String lockKey) {
         while(true){
             String result = tryGetLock(lockKey);
             if(result != null){
@@ -64,24 +95,6 @@ public class DistributeLock {
                     throw new RuntimeException("redis锁重试时，出现异常",e);
                 }
             }
-        }
-    }
-
-    /**
-     * 释放锁操作
-     * */
-    public boolean unlock(String lockKey, String requestID){
-        String script = "if redis.call('get', KEYS[1]) == ARGV[1] "
-            + "then return redis.call('del', KEYS[1]) "
-            + "else return 0 end";
-
-        Object result = RedisClient.getInstance().eval(script, Collections.singletonList(lockKey), Collections.singletonList(requestID));
-
-        // 释放锁没有失败 = 释放锁成功
-        if(!RELEASE_LOCK_FAIL.equals(result)) {
-            return true;
-        }else{
-            return false;
         }
     }
 

@@ -1,3 +1,6 @@
+import lock.api.DistributeLock;
+import lock.impl.RedisDistributeLock;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -26,8 +29,9 @@ public class Test {
         for(int i=0; i<threadNum; i++){
             int currentThreadNum = i;
             Future future = executorService.submit(()->{
+                DistributeLock distributeLock = RedisDistributeLock.getInstance();
                 System.out.println("线程尝试获得锁 i=" + currentThreadNum);
-                String requestID = DistributeLock.getInstance().lock(TEST_REDIS_LOCK_KEY);
+                String requestID = distributeLock.lockAndRetry(TEST_REDIS_LOCK_KEY);
                 System.out.println("获得锁，开始执行任务 requestID=" + requestID + "i=" + currentThreadNum);
 
                 if(currentThreadNum == 1){
@@ -42,7 +46,7 @@ public class Test {
                     e.printStackTrace();
                 }
                 System.out.println("任务执行完毕" + "i=" + currentThreadNum);
-                DistributeLock.getInstance().unlock(TEST_REDIS_LOCK_KEY,requestID);
+                distributeLock.unlock(TEST_REDIS_LOCK_KEY,requestID);
                 System.out.println("释放锁完毕");
             });
 
