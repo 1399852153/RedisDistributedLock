@@ -8,10 +8,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-/**
- * @Author xiongyx
- * @Date 2019/4/3
- */
 public class Test {
 
     private static final String TEST_REDIS_LOCK_KEY = "lock_key";
@@ -46,7 +42,7 @@ public class Test {
                     e.printStackTrace();
                 }
                 System.out.println("任务执行完毕" + "i=" + currentThreadNum);
-                distributeLock.unlock(TEST_REDIS_LOCK_KEY,requestID);
+                distributeLock.unLock(TEST_REDIS_LOCK_KEY,requestID);
                 System.out.println("释放锁完毕");
             });
 

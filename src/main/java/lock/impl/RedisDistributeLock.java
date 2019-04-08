@@ -8,9 +8,6 @@ import java.util.Random;
 import java.util.UUID;
 
 /**
- * @Author xiongyx
- * @Date 2019/4/8
- *
  * redis 分布式锁的简单实现
  */
 public final class RedisDistributeLock implements DistributeLock {
@@ -65,7 +62,7 @@ public final class RedisDistributeLock implements DistributeLock {
     }
 
     @Override
-    public boolean unlock(String lockKey, String requestID) {
+    public boolean unLock(String lockKey, String requestID) {
         String script = "if redis.call('get', KEYS[1]) == ARGV[1] "
             + "then return redis.call('del', KEYS[1]) "
             + "else return 0 end";
@@ -73,11 +70,7 @@ public final class RedisDistributeLock implements DistributeLock {
         Object result = RedisClient.getInstance().eval(script, Collections.singletonList(lockKey), Collections.singletonList(requestID));
 
         // 释放锁没有失败 = 释放锁成功
-        if(!RELEASE_LOCK_FAIL.equals(result)) {
-            return true;
-        }else{
-            return false;
-        }
+        return !RELEASE_LOCK_FAIL.equals(result);
     }
 
     @Override
