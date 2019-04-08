@@ -10,6 +10,8 @@ import java.util.UUID;
 /**
  * @Author xiongyx
  * @Date 2019/4/8
+ *
+ * redis 分布式锁的简单实现
  */
 public final class RedisDistributeLock implements DistributeLock {
 
