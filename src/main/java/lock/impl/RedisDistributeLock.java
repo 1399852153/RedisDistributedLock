@@ -28,7 +28,7 @@ public final class RedisDistributeLock implements DistributeLock {
      * */
     private static final String ADD_LOCK_SUCCESS = "OK";
     /**
-     * 释放锁 成功标识
+     * 释放锁 失败标识
      * */
     private static final Integer RELEASE_LOCK_FAIL = 0;
 
