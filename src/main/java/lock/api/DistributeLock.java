@@ -14,6 +14,14 @@ public interface DistributeLock {
     String lock(String lockKey);
 
     /**
+     * 尝试加锁 可重入
+     * @param lockKey 锁的key
+     * @return 加锁成功 返回uuid
+     *          加锁失败 返回null
+     * */
+    String lock(String lockKey, String requestID);
+
+    /**
      * 释放锁
      * @param lockKey 锁的key
      * @param requestID 用户ID

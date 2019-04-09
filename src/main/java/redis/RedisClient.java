@@ -31,6 +31,13 @@ public class RedisClient {
         return result;
     }
 
+    public String get(final String key){
+        Jedis jedis = getJedis();
+        String result = jedis.get(key);
+        jedis.close();
+        return result;
+    }
+
     public String set(final String key, final String value, final String nxxx, final String expx, final int time) {
         Jedis jedis = getJedis();
         String result = jedis.set(key, value, nxxx, expx, time);
@@ -41,7 +48,7 @@ public class RedisClient {
     private void init(){
         JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
         jedisPoolConfig.setMaxTotal(10);
-        pool = new JedisPool(jedisPoolConfig, "10.46.129.151",6379);
+        pool = new JedisPool(jedisPoolConfig, "127.0.0.1",6379);
         System.out.println("连接池初始化成功");
     }
 

@@ -1,7 +1,10 @@
 package lock.impl;
 
 import lock.api.DistributeLock;
+import lock.constants.LuaScript;
+import lock.model.LockContent;
 import redis.RedisClient;
+import util.JsonUtil;
 
 import java.util.Collections;
 import java.util.Random;
@@ -51,7 +54,12 @@ public final class RedisDistributeLock implements DistributeLock {
     @Override
     public String lock(String lockKey) {
         String uuid = UUID.randomUUID().toString();
-        String result = RedisClient.getInstance().set(lockKey, uuid, NX, EX, DEFAULT_EXPIRE_TIME_SECOND);
+
+        LockContent lockContent = new LockContent(uuid,1);
+        String lockContentJsonStr = JsonUtil.objToJsonStr(lockContent);
+
+        RedisClient redisClient = RedisClient.getInstance();
+        String result = redisClient.set(lockKey, lockContentJsonStr, NX, EX, DEFAULT_EXPIRE_TIME_SECOND);
 
         // 如果加锁成功
         if(ADD_LOCK_SUCCESS.equalsIgnoreCase(result)){
@@ -62,12 +70,36 @@ public final class RedisDistributeLock implements DistributeLock {
     }
 
     @Override
-    public boolean unLock(String lockKey, String requestID) {
-        String script = "if redis.call('get', KEYS[1]) == ARGV[1] "
-            + "then return redis.call('del', KEYS[1]) "
-            + "else return 0 end";
+    public String lock(String lockKey, String requestID) {
+        RedisClient redisClient = RedisClient.getInstance();
 
-        Object result = RedisClient.getInstance().eval(script, Collections.singletonList(lockKey), Collections.singletonList(requestID));
+        String currentLockContentJsonStr = redisClient.get(lockKey);
+        if(currentLockContentJsonStr == null){
+            // 之前不存在锁，直接加锁
+            return lock(lockKey);
+        }
+
+        LockContent currentLockContent = JsonUtil.jsonStrToObj(currentLockContentJsonStr,LockContent.class);
+        // 如果锁存在，而且requestID 相等
+        if(currentLockContent.getRequestID().equals(requestID)){
+            // requestID 相等 lockCount自增
+            currentLockContent.lockCountInc();
+
+            String newLockContentJsonStr = JsonUtil.objToJsonStr(currentLockContent);
+            // 存入新的content内容，并且重置超时时间 todo 实现可重入锁加锁脚本
+            String result = (String)redisClient.eval(LuaScript.RLOCK_SCRIPT, Collections.singletonList(lockKey), Collections.singletonList(null));
+
+            // todo 判断是否可重入锁加锁成功
+            return requestID;
+        }else{
+            // requestID 不相等，加锁失败
+            return null;
+        }
+    }
+
+    @Override
+    public boolean unLock(String lockKey, String requestID) {
+        Object result = RedisClient.getInstance().eval(LuaScript.UN_LOCK_SCRIPT, Collections.singletonList(lockKey), Collections.singletonList(requestID));
 
         // 释放锁没有失败 = 释放锁成功
         return !RELEASE_LOCK_FAIL.equals(result);
