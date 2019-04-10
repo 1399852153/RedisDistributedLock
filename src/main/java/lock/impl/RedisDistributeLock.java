@@ -8,10 +8,12 @@ import java.util.*;
 
 /**
  * redis 分布式锁的简单实现
+ * @author xiongyx
  */
 public final class RedisDistributeLock implements DistributeLock {
 
     private RedisDistributeLock() {
+        LuaScript.init();
     }
 
     private static DistributeLock instance = new RedisDistributeLock();

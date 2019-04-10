@@ -18,39 +18,54 @@ public class LuaScript {
      *            不相等，说明已经被抢占，加锁失败，返回null
      * 3. 如果不存在，说明恰好已经过期，重新生成key
      * */
-    public static final String LOCK_SCRIPT = ""
-        + "local requestIDKey = KEYS[1] "
-        + "local lockCountKey = KEYS[2] "
-        + "local currentRequestID = ARGV[1] "
-        + "local expireTimeTTL = ARGV[2] "
-        + "local lockSet = redis.call('setnx',requestIDKey,currentRequestID) "
-        + "if lockSet == 1 "
-        + "then "
-        + "redis.call('expire',requestIDKey,expireTimeTTL) "
-        + "redis.call('set',lockCountKey,1) "
-        + "redis.call('expire',lockCountKey,expireTimeTTL) "
-        + "return 1 "
-        + "else "
-        + "local oldRequestID = redis.call('get',requestIDKey) "
-        + "if currentRequestID == oldRequestID "
-        + "then "
-        + "redis.call('incr',lockCountKey) "
-        + "redis.call('expire',requestIDKey,expireTimeTTL) "
-        + "redis.call('expire',lockCountKey,expireTimeTTL) "
-        + "return 1 "
-        + "else return 0  "
-        + "end "
-        + "end ";
+    public static String LOCK_SCRIPT = "";
 
     /**
      * 解锁脚本 todo
      * */
-        public static final String UN_LOCK_SCRIPT = "";
+    public static String UN_LOCK_SCRIPT = "";
+
+    public static void init(){
+        try {
+            initLockScript();
+            initUnLockScript();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void initLockScript() throws IOException {
+        String filePath = "src/main/resources/lock.lua";
+        LOCK_SCRIPT = readFile(filePath);
+    }
+
+    private static void initUnLockScript() throws IOException {
+        String filePath = "src/main/resources/lock.lua";
+        UN_LOCK_SCRIPT = readFile(filePath);
+    }
+
+    private static String readFile(String filePath) throws IOException {
+        try (
+            FileReader reader = new FileReader(filePath);
+            BufferedReader br = new BufferedReader(reader)
+        ) {
+            String line;
+            StringBuilder stringBuilder = new StringBuilder();
+            while ((line = br.readLine()) != null) {
+                stringBuilder.append(line).append(System.lineSeparator());
+            }
+
+            return stringBuilder.toString();
+        }
+    }
+
 
     public static void main(String[] args) {
 //        printTest();
 
-        printLockScript();
+//        printLockScript();
+
+        init();
     }
 
     private static void printTest(){
