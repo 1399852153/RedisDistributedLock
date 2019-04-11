@@ -3,6 +3,8 @@ package lock.script;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URL;
+import java.util.Objects;
 
 /**
  * @Author xiongyx
@@ -35,12 +37,12 @@ public class LuaScript {
     }
 
     private static void initLockScript() throws IOException {
-        String filePath = "lock.lua";
+        String filePath = Objects.requireNonNull(LuaScript.class.getClassLoader().getResource("lock.lua")).getPath();
         LOCK_SCRIPT = readFile(filePath);
     }
 
     private static void initUnLockScript() throws IOException {
-        String filePath = "unlock.lua";
+        String filePath = Objects.requireNonNull(LuaScript.class.getClassLoader().getResource("unlock.lua")).getPath();
         UN_LOCK_SCRIPT = readFile(filePath);
     }
 
@@ -69,7 +71,8 @@ public class LuaScript {
     }
 
     private static void printTest(){
-        String pathname = "src/main/resources/lock.lua";
+        URL script = LuaScript.class.getClassLoader().getResource("lock.lua");
+        String pathname = script.getPath();
         print(pathname);
     }
 
