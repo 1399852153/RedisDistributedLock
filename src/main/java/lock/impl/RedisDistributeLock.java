@@ -59,17 +59,29 @@ public final class RedisDistributeLock implements DistributeLock {
     }
 
     @Override
+    public String lock(String lockKey, int expireTime) {
+        String uuid = UUID.randomUUID().toString();
+
+        return lock(lockKey,uuid,expireTime);
+    }
+
+    @Override
     public String lock(String lockKey, String requestID) {
+        return lock(lockKey,requestID,DEFAULT_EXPIRE_TIME_SECOND);
+    }
+
+    @Override
+    public String lock(String lockKey, String requestID, int expireTime) {
         RedisClient redisClient = RedisClient.getInstance();
 
         List<String> keyList = Arrays.asList(
-            lockKey,
-            LOCK_COUNT_KEY_PREFIX + lockKey
+                lockKey,
+                LOCK_COUNT_KEY_PREFIX + lockKey
         );
 
         List<String> argsList = Arrays.asList(
-            requestID,
-            DEFAULT_EXPIRE_TIME_SECOND + ""
+                requestID,
+                expireTime + ""
         );
         Long result = (Long)redisClient.eval(LuaScript.LOCK_SCRIPT, keyList, argsList);
 
@@ -81,24 +93,28 @@ public final class RedisDistributeLock implements DistributeLock {
     }
 
     @Override
-    public boolean unLock(String lockKey, String requestID) {
-        List<String> keyList = Arrays.asList(
-            lockKey,
-            LOCK_COUNT_KEY_PREFIX + lockKey
-        );
+    public String lockAndRetry(String lockKey) {
+        String uuid = UUID.randomUUID().toString();
 
-        List<String> argsList = Collections.singletonList(requestID);
-
-        Object result = RedisClient.getInstance().eval(LuaScript.UN_LOCK_SCRIPT, keyList, argsList);
-
-        // 释放锁没有失败 = 释放锁成功
-        return RELEASE_LOCK_SUCCESS.equals(result);
+        return lockAndRetry(lockKey,uuid);
     }
 
     @Override
-    public String lockAndRetry(String lockKey) {
+    public String lockAndRetry(String lockKey, String requestID) {
+        return lockAndRetry(lockKey,requestID,DEFAULT_EXPIRE_TIME_SECOND);
+    }
+
+    @Override
+    public String lockAndRetry(String lockKey, int expireTime) {
+        String uuid = UUID.randomUUID().toString();
+
+        return lockAndRetry(lockKey,uuid,expireTime);
+    }
+
+    @Override
+    public String lockAndRetry(String lockKey, String requestID, int expireTime) {
         while(true){
-            String result = lock(lockKey);
+            String result = lock(lockKey,requestID,expireTime);
             if(result != null){
                 System.out.println("加锁成功 currentName=" + Thread.currentThread().getName());
                 return result;
@@ -113,6 +129,21 @@ public final class RedisDistributeLock implements DistributeLock {
                 }
             }
         }
+    }
+
+    @Override
+    public boolean unLock(String lockKey, String requestID) {
+        List<String> keyList = Arrays.asList(
+                lockKey,
+                LOCK_COUNT_KEY_PREFIX + lockKey
+        );
+
+        List<String> argsList = Collections.singletonList(requestID);
+
+        Object result = RedisClient.getInstance().eval(LuaScript.UN_LOCK_SCRIPT, keyList, argsList);
+
+        // 释放锁没有失败 = 释放锁成功
+        return RELEASE_LOCK_SUCCESS.equals(result);
     }
 
     //==============================================私有方法========================================
