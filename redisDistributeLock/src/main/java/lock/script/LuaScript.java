@@ -35,12 +35,12 @@ public class LuaScript {
     }
 
     private static void initLockScript() throws IOException {
-        String filePath = "src/main/resources/lock.lua";
+        String filePath = "lock.lua";
         LOCK_SCRIPT = readFile(filePath);
     }
 
     private static void initUnLockScript() throws IOException {
-        String filePath = "src/main/resources/unlock.lua";
+        String filePath = "unlock.lua";
         UN_LOCK_SCRIPT = readFile(filePath);
     }
 
@@ -61,15 +61,15 @@ public class LuaScript {
 
 
     public static void main(String[] args) {
-//        printTest();
+        printTest();
 
 //        printLockScript();
 
-        init();
+//        init();
     }
 
     private static void printTest(){
-        String pathname = "C:\\Users\\xiongyx\\Desktop\\lua.txt";
+        String pathname = "src/main/resources/lock.lua";
         print(pathname);
     }
 
