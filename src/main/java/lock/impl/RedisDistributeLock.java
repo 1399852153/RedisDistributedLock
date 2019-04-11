@@ -97,41 +97,25 @@ public final class RedisDistributeLock implements DistributeLock {
 
     @Override
     public String lockAndRetry(String lockKey) {
-        return null;
-//        while(true){
-//            String result = tryGetLock(lockKey);
-//            if(result != null){
-//                System.out.println("加锁成功 currentName=" + Thread.currentThread().getName());
-//                return result;
-//            }else{
-//                // 重试时间 单位：毫秒
-//                int retryTime = getFinallyGetLockRetryTime();
-//                System.out.println("加锁失败 currentName=" + Thread.currentThread().getName() + " 重试间隔时间=" + retryTime + "ms");
-//                try {
-//                    Thread.sleep(retryTime);
-//                } catch (InterruptedException e) {
-//                    throw new RuntimeException("redis锁重试时，出现异常",e);
-//                }
-//            }
-//        }
+        while(true){
+            String result = lock(lockKey);
+            if(result != null){
+                System.out.println("加锁成功 currentName=" + Thread.currentThread().getName());
+                return result;
+            }else{
+                // 重试时间 单位：毫秒
+                int retryTime = getFinallyGetLockRetryTime();
+                System.out.println("加锁失败 currentName=" + Thread.currentThread().getName() + " 重试间隔时间=" + retryTime + "ms");
+                try {
+                    Thread.sleep(retryTime);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException("redis锁重试时，出现异常",e);
+                }
+            }
+        }
     }
 
     //==============================================私有方法========================================
-
-    /**
-     * 尝试获得锁
-     * */
-//    private String tryGetLock(String lockKey){
-//        String uuid = UUID.randomUUID().toString();
-//        String result = RedisClient.getInstance().set(lockKey, uuid, NX, EX, DEFAULT_EXPIRE_TIME_SECOND);
-//
-//        // 如果加锁成功
-//        if(ADD_LOCK_SUCCESS == (result)){
-//            return uuid;
-//        }else{
-//            return null;
-//        }
-//    }
 
     /**
      * 获得最终的获得锁的重试时间
