@@ -25,7 +25,7 @@ public final class RedisDistributeLock implements DistributeLock {
     /**
      * 释放锁 失败标识
      * */
-    private static final Integer RELEASE_LOCK_FAIL = 0;
+    private static final Integer RELEASE_LOCK_SUCCESS = 1;
 
     /**
      * 默认过期时间 单位：秒
@@ -85,7 +85,7 @@ public final class RedisDistributeLock implements DistributeLock {
         Object result = RedisClient.getInstance().eval(LuaScript.UN_LOCK_SCRIPT, Collections.singletonList(lockKey), Collections.singletonList(requestID));
 
         // 释放锁没有失败 = 释放锁成功
-        return !RELEASE_LOCK_FAIL.equals(result);
+        return RELEASE_LOCK_SUCCESS.equals(result);
     }
 
     @Override

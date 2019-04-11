@@ -11,7 +11,7 @@ import java.io.IOException;
 public class LuaScript {
 
     /**
-     * 加锁脚本
+     * 加锁脚本 lock.lua
      * 1. 判断key是否存在
      * 2. 如果存在，判断requestID是否相等
      *            相等，则删除掉key重新创建新的key值，重置过期时间
@@ -21,7 +21,7 @@ public class LuaScript {
     public static String LOCK_SCRIPT = "";
 
     /**
-     * 解锁脚本 todo
+     * 解锁脚本 unlock.lua
      * */
     public static String UN_LOCK_SCRIPT = "";
 
@@ -40,7 +40,7 @@ public class LuaScript {
     }
 
     private static void initUnLockScript() throws IOException {
-        String filePath = "src/main/resources/lock.lua";
+        String filePath = "src/main/resources/unlock.lua";
         UN_LOCK_SCRIPT = readFile(filePath);
     }
 
