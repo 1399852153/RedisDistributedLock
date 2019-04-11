@@ -82,7 +82,14 @@ public final class RedisDistributeLock implements DistributeLock {
 
     @Override
     public boolean unLock(String lockKey, String requestID) {
-        Object result = RedisClient.getInstance().eval(LuaScript.UN_LOCK_SCRIPT, Collections.singletonList(lockKey), Collections.singletonList(requestID));
+        List<String> keyList = Arrays.asList(
+            lockKey,
+            LOCK_COUNT_KEY_PREFIX + lockKey
+        );
+
+        List<String> argsList = Collections.singletonList(requestID);
+
+        Object result = RedisClient.getInstance().eval(LuaScript.UN_LOCK_SCRIPT, keyList, argsList);
 
         // 释放锁没有失败 = 释放锁成功
         return RELEASE_LOCK_SUCCESS.equals(result);

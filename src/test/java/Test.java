@@ -18,8 +18,12 @@ public class Test {
         if(requestID != null){
             if(distributeLock.lock(TEST_REDIS_LOCK_KEY,requestID) != null){
                 distributeLock.lock(TEST_REDIS_LOCK_KEY,requestID);
+                distributeLock.unLock(TEST_REDIS_LOCK_KEY,requestID);
+                distributeLock.unLock(TEST_REDIS_LOCK_KEY,requestID);
             }
+            distributeLock.unLock(TEST_REDIS_LOCK_KEY,requestID);
         }
+
 
 //        testLock();
     }
