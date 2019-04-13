@@ -116,12 +116,10 @@ public final class RedisDistributeLock implements DistributeLock {
         while(true){
             String result = lock(lockKey,requestID,expireTime);
             if(result != null){
-                System.out.println("加锁成功 currentName=" + Thread.currentThread().getName());
                 return result;
             }else{
                 // 重试时间 单位：毫秒
                 int retryTime = getFinallyGetLockRetryTime();
-                System.out.println("加锁失败 currentName=" + Thread.currentThread().getName() + " 重试间隔时间=" + retryTime + "ms");
                 try {
                     Thread.sleep(retryTime);
                 } catch (InterruptedException e) {

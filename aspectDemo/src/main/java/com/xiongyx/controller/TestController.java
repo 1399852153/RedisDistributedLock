@@ -26,9 +26,9 @@ public class TestController {
         String num = request.getParameter("num");
         System.out.println("接收到请求 num=" + num);
 
-        testService.method1();
+        testService.method1(num);
 
-        testService.method2();
+        testService.method2(num);
 
         System.out.println("请求处理完毕 num=" + num);
         return "ok";

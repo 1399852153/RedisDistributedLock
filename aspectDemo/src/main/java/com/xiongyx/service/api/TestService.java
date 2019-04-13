@@ -6,7 +6,7 @@ package com.xiongyx.service.api;
  */
 public interface TestService {
 
-    void method1();
+    void method1(String num);
 
-    void method2();
+    void method2(String num);
 }

@@ -13,13 +13,13 @@ public class TestServiceImpl implements TestService {
 
     @Override
     @RedisLock(lockKey = "lockKey", expireTime = 100)
-    public void method1() {
-        System.out.println("method1 ...");
+    public void method1(String num) {
+        System.out.println("method1 ... num=" + num);
     }
 
     @Override
     @RedisLock(lockKey = "lockKey", expireTime = 100)
-    public void method2() {
-        System.out.println("method2 ...");
+    public void method2(String num) {
+        System.out.println("method2 ... num=" + num);
     }
 }

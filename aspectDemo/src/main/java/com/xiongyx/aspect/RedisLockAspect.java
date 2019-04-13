@@ -33,10 +33,7 @@ public class RedisLockAspect {
         MethodSignature methodSignature = (MethodSignature)joinPoint.getSignature();
         Method method = methodSignature.getMethod();
         RedisLock annotation = method.getAnnotation(RedisLock.class);
-
-        System.out.println("注解式拦截 before lockKey: " + annotation.lockKey());
-        System.out.println("注解式拦截 before expireTime: " + annotation.expireTime());
-
+        
         DistributeLock distributeLock = RedisDistributeLock.getInstance();
 
         String requestID = REQUEST_ID_MAP.get();
@@ -56,8 +53,6 @@ public class RedisLockAspect {
         MethodSignature methodSignature = (MethodSignature)joinPoint.getSignature();
         Method method = methodSignature.getMethod();
         RedisLock annotation = method.getAnnotation(RedisLock.class);
-        System.out.println("注解式拦截 after lockKey: " + annotation.lockKey());
-        System.out.println("注解式拦截 after expireTime: " + annotation.expireTime());
 
         DistributeLock distributeLock = RedisDistributeLock.getInstance();
         String requestID = REQUEST_ID_MAP.get();
