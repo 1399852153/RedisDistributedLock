@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>并发测试</title>
+</head>
+
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>
+<script>
+    debugger;
+    for(let i=0; i<5; i++){
+        console.log('发送请求 i=' + i);
+        requestTest(i);
+    }
+
+    function requestTest(i){
+        $.ajax({
+            url : "http://localhost:9998/test",
+            dataType : 'JSON',
+            data : {
+                num : i
+            },
+            success : function(){
+                console.log('请求完成！i=' + i);
+            }
+        })
+    }
+</script>
+<body>
+</body>
+</html>
