@@ -1,6 +1,8 @@
 package com.xiongyx.aspect;
 
 import com.xiongyx.annotation.RedisLock;
+import lock.api.DistributeLock;
+import lock.impl.RedisDistributeLock;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
@@ -9,7 +11,6 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
-import javax.xml.ws.Action;
 import java.lang.reflect.Method;
 
 /**
@@ -21,6 +22,8 @@ import java.lang.reflect.Method;
 @Aspect
 public class RedisLockAspect {
 
+    private static final ThreadLocal<String> REQUEST_ID_MAP = new ThreadLocal<>();
+
     @Pointcut("@annotation(com.xiongyx.annotation.RedisLock)")
     public void annotationPointcut() {
     }
@@ -30,8 +33,22 @@ public class RedisLockAspect {
         MethodSignature methodSignature = (MethodSignature)joinPoint.getSignature();
         Method method = methodSignature.getMethod();
         RedisLock annotation = method.getAnnotation(RedisLock.class);
+
         System.out.println("注解式拦截 before lockKey: " + annotation.lockKey());
         System.out.println("注解式拦截 before expireTime: " + annotation.expireTime());
+
+        DistributeLock distributeLock = RedisDistributeLock.getInstance();
+
+        String requestID = REQUEST_ID_MAP.get();
+        if(requestID != null){
+            // 当前线程 已经存在requestID
+            distributeLock.lockAndRetry(annotation.lockKey(),requestID,annotation.expireTime());
+        }else{
+            // 当前线程 不存在requestID
+            String newRequestID = distributeLock.lockAndRetry(annotation.lockKey(),annotation.expireTime());
+            // 加锁成功，设置新的requestID
+            REQUEST_ID_MAP.set(newRequestID);
+        }
     }
 
     @After("annotationPointcut()")
@@ -41,5 +58,16 @@ public class RedisLockAspect {
         RedisLock annotation = method.getAnnotation(RedisLock.class);
         System.out.println("注解式拦截 after lockKey: " + annotation.lockKey());
         System.out.println("注解式拦截 after expireTime: " + annotation.expireTime());
+
+        DistributeLock distributeLock = RedisDistributeLock.getInstance();
+        String requestID = REQUEST_ID_MAP.get();
+        if(requestID != null){
+            // 解锁成功
+            boolean unLockSuccess = distributeLock.unLock(annotation.lockKey(),requestID);
+            if(unLockSuccess){
+                // 移除 ThreadLocal中的数据
+                REQUEST_ID_MAP.remove();
+            }
+        }
     }
 }
