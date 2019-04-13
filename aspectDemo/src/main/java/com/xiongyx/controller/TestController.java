@@ -22,7 +22,7 @@ public class TestController {
 
     @RequestMapping("/test")
     @ResponseBody
-    public String test(HttpServletRequest request){
+    public String test(HttpServletRequest request) throws InterruptedException {
         String num = request.getParameter("num");
         System.out.println("接收到请求 num=" + num);
 

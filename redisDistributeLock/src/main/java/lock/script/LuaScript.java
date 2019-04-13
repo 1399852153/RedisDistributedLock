@@ -60,49 +60,4 @@ public class LuaScript {
             return stringBuilder.toString();
         }
     }
-
-
-    public static void main(String[] args) {
-        printTest();
-
-//        printLockScript();
-
-//        init();
-    }
-
-    private static void printTest(){
-        URL script = LuaScript.class.getClassLoader().getResource("lock.lua");
-        String pathname = script.getPath();
-        print(pathname);
-    }
-
-    private static void printLockScript(){
-        String pathname = "C:\\Users\\xiongyx\\Desktop\\luaLock.txt";
-        print(pathname);
-    }
-
-    private static void print(String pathName){
-        try (FileReader reader = new FileReader(pathName);
-            BufferedReader br = new BufferedReader(reader)
-        ) {
-            String line;
-            StringBuilder stringBuilder = new StringBuilder();
-            while ((line = br.readLine()) != null) {
-                System.out.println(line);
-                stringBuilder.append(line + " ");
-            }
-            System.out.println("==================================");
-            System.out.println("eval \"" + stringBuilder + "\"" + getKeys() + getArgs());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static String getKeys(){
-        return " 2 lockKey lockCountKey ";
-    }
-
-    private static String getArgs(){
-        return " user111 1000";
-    }
 }

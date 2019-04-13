@@ -6,7 +6,7 @@ package com.xiongyx.service.api;
  */
 public interface TestService {
 
-    void method1(String num);
+    void method1(String num) throws InterruptedException;
 
-    void method2(String num);
+    void method2(String num) throws InterruptedException;
 }

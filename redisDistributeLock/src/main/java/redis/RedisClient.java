@@ -7,8 +7,8 @@ import redis.clients.jedis.JedisPoolConfig;
 import java.util.List;
 
 /**
- * @Author xiongyx
- * @Date 2019/4/3
+ * @author xiongyx
+ * @date 2019/4/3
  */
 public class RedisClient {
 
