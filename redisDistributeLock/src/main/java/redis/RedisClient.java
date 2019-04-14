@@ -60,7 +60,7 @@ public class RedisClient {
         JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
         jedisPoolConfig.setMaxTotal(maxTotal);
         pool = new JedisPool(jedisPoolConfig, ip,port);
-        LOGGER.info("连接池初始化成功");
+        LOGGER.info("连接池初始化成功 ip={}, port={}, maxTotal={}",ip,port,maxTotal);
     }
 
     private Jedis getJedis(){
