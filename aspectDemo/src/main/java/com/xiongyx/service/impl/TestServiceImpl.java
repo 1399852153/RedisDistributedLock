@@ -1,7 +1,10 @@
 package com.xiongyx.service.impl;
 
 import com.xiongyx.annotation.RedisLock;
+import com.xiongyx.aspect.RedisLockAspect;
 import com.xiongyx.service.api.TestService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -11,11 +14,13 @@ import org.springframework.stereotype.Service;
 @Service("testService")
 public class TestServiceImpl implements TestService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(RedisLockAspect.class);
+
     @Override
     @RedisLock(lockKey = "lockKey", expireTime = 100)
     public void method1(String num) throws InterruptedException {
         Thread.sleep(100);
-        System.out.println("method1 ... num=" + num);
+        LOGGER.info("method1 ... 休眠100ms num=" + num);
     }
 
     @Override
@@ -23,6 +28,6 @@ public class TestServiceImpl implements TestService {
 
     public void method2(String num) throws InterruptedException {
         Thread.sleep(100);
-        System.out.println("method2 ... num=" + num);
+        LOGGER.info("method2 ... 休眠100ms num=" + num);
     }
 }

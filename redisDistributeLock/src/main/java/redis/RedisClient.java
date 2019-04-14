@@ -1,16 +1,22 @@
 package redis;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import util.PropsUtil;
 
 import java.util.List;
+import java.util.Properties;
 
 /**
  * @author xiongyx
  * @date 2019/4/3
  */
 public class RedisClient {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RedisClient.class);
 
     private JedisPool pool;
 
@@ -46,10 +52,15 @@ public class RedisClient {
     }
 
     private void init(){
+        Properties redisConfig = PropsUtil.loadProps("redis.properties");
+        int maxTotal = PropsUtil.getInt(redisConfig,"maxTotal",10);
+        String ip = PropsUtil.getString(redisConfig,"ip","127.0.0.1");
+        int port = PropsUtil.getInt(redisConfig,"port",6379);
+
         JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
-        jedisPoolConfig.setMaxTotal(10);
-        pool = new JedisPool(jedisPoolConfig, "127.0.0.1",6379);
-        System.out.println("连接池初始化成功");
+        jedisPoolConfig.setMaxTotal(maxTotal);
+        pool = new JedisPool(jedisPoolConfig, ip,port);
+        LOGGER.info("连接池初始化成功");
     }
 
     private Jedis getJedis(){

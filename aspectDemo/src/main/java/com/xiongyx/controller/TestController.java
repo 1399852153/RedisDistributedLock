@@ -1,6 +1,9 @@
 package com.xiongyx.controller;
 
+import com.xiongyx.aspect.RedisLockAspect;
 import com.xiongyx.service.api.TestService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -17,6 +20,9 @@ import javax.servlet.http.HttpServletRequest;
 @Controller
 public class TestController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestController.class);
+
+
     @Autowired
     private TestService testService;
 
@@ -24,13 +30,13 @@ public class TestController {
     @ResponseBody
     public String test(HttpServletRequest request) throws InterruptedException {
         String num = request.getParameter("num");
-        System.out.println("接收到请求 num=" + num);
+        LOGGER.info("接收到请求 num=" + num);
 
         testService.method1(num);
 
         testService.method2(num);
 
-        System.out.println("请求处理完毕 num=" + num);
+        LOGGER.info("请求处理完毕 num=" + num);
         return "ok";
     }
 }
