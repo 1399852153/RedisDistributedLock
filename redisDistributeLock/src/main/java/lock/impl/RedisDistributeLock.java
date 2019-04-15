@@ -39,6 +39,10 @@ public final class RedisDistributeLock implements DistributeLock {
      * 默认的加锁浮动时间区间 单位：毫秒
      * */
     private static final int DEFAULT_RETRY_TIME_RANGE = 1000;
+    /**
+     * 默认的加锁重试次数
+     * */
+    private static final int DEFAULT_RETRY_COUNT = 30;
 
     /**
      * lockCount Key前缀
@@ -112,21 +116,38 @@ public final class RedisDistributeLock implements DistributeLock {
     }
 
     @Override
+    public String lockAndRetry(String lockKey, int expireTime, int retryCount) {
+        for(int i=0; i<retryCount; i++){
+            String result = lock(lockKey,expireTime);
+            if(result != null){
+                return result;
+            }
+
+            // 休眠一会
+            sleepSomeTime();
+        }
+
+        return null;
+    }
+
+    @Override
     public String lockAndRetry(String lockKey, String requestID, int expireTime) {
-        while(true){
+        return lockAndRetry(lockKey,requestID,expireTime,DEFAULT_RETRY_COUNT);
+    }
+
+    @Override
+    public String lockAndRetry(String lockKey, String requestID, int expireTime, int retryCount) {
+        for(int i=0; i<retryCount; i++){
             String result = lock(lockKey,requestID,expireTime);
             if(result != null){
                 return result;
-            }else{
-                // 重试时间 单位：毫秒
-                int retryTime = getFinallyGetLockRetryTime();
-                try {
-                    Thread.sleep(retryTime);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException("redis锁重试时，出现异常",e);
-                }
             }
+
+            // 休眠一会
+            sleepSomeTime();
         }
+
+        return null;
     }
 
     @Override
@@ -154,5 +175,18 @@ public final class RedisDistributeLock implements DistributeLock {
 
         // 最终重试时间 = 固定时间 + 浮动时间
         return DEFAULT_RETRY_FIXED_TIME + ra.nextInt(DEFAULT_RETRY_TIME_RANGE);
+    }
+
+    /**
+     * 当前线程 休眠一端时间
+     * */
+    private void sleepSomeTime(){
+        // 重试时间 单位：毫秒
+        int retryTime = getFinallyGetLockRetryTime();
+        try {
+            Thread.sleep(retryTime);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("redis锁重试时，出现异常",e);
+        }
     }
 }
