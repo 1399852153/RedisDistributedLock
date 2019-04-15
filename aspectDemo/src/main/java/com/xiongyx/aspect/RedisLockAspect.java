@@ -75,7 +75,7 @@ public class RedisLockAspect {
 
                 return true;
             }else{
-                LOGGER.info("加锁失败，超过重试次数，直接返回");
+                LOGGER.info("加锁失败，超过重试次数，直接返回 retryCount={}",retryCount);
 
                 return false;
             }
