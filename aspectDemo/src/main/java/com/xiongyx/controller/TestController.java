@@ -32,11 +32,11 @@ public class TestController {
         String num = request.getParameter("num");
         LOGGER.info("接收到请求 num=" + num);
 
-        testService.method1(num);
+        String method1Result = testService.method1(num);
 
-        testService.method2(num);
+        String method2Result = testService.method2(num);
 
-        LOGGER.info("请求处理完毕 num=" + num);
+        LOGGER.info("请求处理完毕 num={},method1Result={},method2Result={}",num,method1Result,method2Result);
         return "ok";
     }
 }

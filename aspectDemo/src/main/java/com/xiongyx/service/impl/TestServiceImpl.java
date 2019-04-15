@@ -17,17 +17,20 @@ public class TestServiceImpl implements TestService {
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisLockAspect.class);
 
     @Override
-    @RedisLock(lockKey = "lockKey", expireTime = 100)
-    public void method1(String num) throws InterruptedException {
-        Thread.sleep(100);
-        LOGGER.info("method1 ... 休眠100ms num=" + num);
+    @RedisLock(lockKey = "lockKey", expireTime = 100, retryCount = 2)
+    public String method1(String num) throws InterruptedException {
+        int sleepMS = 1000;
+        Thread.sleep(sleepMS);
+        LOGGER.info("method1 ... 休眠{}ms num={}",sleepMS,num);
+        return "method1";
     }
 
     @Override
-    @RedisLock(lockKey = "lockKey", expireTime = 100)
-
-    public void method2(String num) throws InterruptedException {
-        Thread.sleep(100);
-        LOGGER.info("method2 ... 休眠100ms num=" + num);
+    @RedisLock(lockKey = "lockKey", expireTime = 100, retryCount = 3)
+    public String method2(String num) throws InterruptedException {
+        int sleepMS = 1000;
+        Thread.sleep(sleepMS);
+        LOGGER.info("method2 ... 休眠{}ms num={}",sleepMS,num);
+        return "method2";
     }
 }

@@ -13,4 +13,5 @@ import java.lang.annotation.*;
 public @interface RedisLock {
     String lockKey();
     int expireTime();
+    int retryCount();
 }

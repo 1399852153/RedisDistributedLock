@@ -4,10 +4,8 @@ import com.xiongyx.annotation.RedisLock;
 import lock.api.DistributeLock;
 import lock.impl.RedisDistributeLock;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.After;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.*;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,34 +33,59 @@ public class RedisLockAspect {
     public void annotationPointcut() {
     }
 
-    @Before("annotationPointcut()")
-    public void before(JoinPoint joinPoint) {
+    @Around("annotationPointcut()")
+    public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature methodSignature = (MethodSignature)joinPoint.getSignature();
         Method method = methodSignature.getMethod();
         RedisLock annotation = method.getAnnotation(RedisLock.class);
-        
+
+        boolean lockSuccess = lock(annotation);
+        if(lockSuccess){
+            Object result = joinPoint.proceed();
+            unlock(annotation);
+            return result;
+        }
+
+        return null;
+    }
+
+    /**
+     * 加锁
+     * */
+    private boolean lock(RedisLock annotation){
         DistributeLock distributeLock = RedisDistributeLock.getInstance();
+
+        int retryCount = annotation.retryCount();
 
         String requestID = REQUEST_ID_MAP.get();
         if(requestID != null){
             // 当前线程 已经存在requestID
-            distributeLock.lockAndRetry(annotation.lockKey(),requestID,annotation.expireTime());
+            distributeLock.lockAndRetry(annotation.lockKey(),requestID,annotation.expireTime(),retryCount);
             LOGGER.info("重入加锁成功 requestID=" + requestID);
+
+            return true;
         }else{
             // 当前线程 不存在requestID
-            String newRequestID = distributeLock.lockAndRetry(annotation.lockKey(),annotation.expireTime());
-            // 加锁成功，设置新的requestID
-            REQUEST_ID_MAP.set(newRequestID);
-            LOGGER.info("加锁成功 newRequestID=" + newRequestID);
+            String newRequestID = distributeLock.lockAndRetry(annotation.lockKey(),annotation.expireTime(),retryCount);
+
+            if(newRequestID != null){
+                // 加锁成功，设置新的requestID
+                REQUEST_ID_MAP.set(newRequestID);
+                LOGGER.info("加锁成功 newRequestID=" + newRequestID);
+
+                return true;
+            }else{
+                LOGGER.info("加锁失败，超过重试次数，直接返回");
+
+                return false;
+            }
         }
     }
 
-    @After("annotationPointcut()")
-    public void after(JoinPoint joinPoint) {
-        MethodSignature methodSignature = (MethodSignature)joinPoint.getSignature();
-        Method method = methodSignature.getMethod();
-        RedisLock annotation = method.getAnnotation(RedisLock.class);
-
+    /**
+     * 解锁
+     * */
+    private void unlock(RedisLock annotation){
         DistributeLock distributeLock = RedisDistributeLock.getInstance();
         String requestID = REQUEST_ID_MAP.get();
         if(requestID != null){
