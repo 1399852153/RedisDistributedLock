@@ -161,7 +161,7 @@ public final class RedisDistributeLock implements DistributeLock {
 
         Object result = RedisClient.getInstance().eval(LuaScript.UN_LOCK_SCRIPT, keyList, argsList);
 
-        // 释放锁没有失败 = 释放锁成功
+        // 释放锁成功
         return RELEASE_LOCK_SUCCESS.equals(result);
     }
 
