@@ -12,6 +12,11 @@ import java.util.*;
  */
 public final class RedisDistributeLock implements DistributeLock {
 
+    /**
+     * 无限重试
+     * */
+    public static final int UN_LIMIT_RETRY = -1;
+
     private RedisDistributeLock() {
         LuaScript.init();
     }
@@ -137,17 +142,31 @@ public final class RedisDistributeLock implements DistributeLock {
 
     @Override
     public String lockAndRetry(String lockKey, String requestID, int expireTime, int retryCount) {
-        for(int i=0; i<retryCount; i++){
-            String result = lock(lockKey,requestID,expireTime);
-            if(result != null){
-                return result;
+        if(retryCount <= 0){
+            // retryCount小于等于0 无限循环，一直尝试加锁
+            while(true){
+                String result = lock(lockKey,requestID,expireTime);
+                if(result != null){
+                    return result;
+                }
+
+                // 休眠一会
+                sleepSomeTime();
+            }
+        }else{
+            // retryCount大于0 尝试指定次数后，退出
+            for(int i=0; i<retryCount; i++){
+                String result = lock(lockKey,requestID,expireTime);
+                if(result != null){
+                    return result;
+                }
+
+                // 休眠一会
+                sleepSomeTime();
             }
 
-            // 休眠一会
-            sleepSomeTime();
+            return null;
         }
-
-        return null;
     }
 
     @Override
