@@ -15,7 +15,7 @@ public final class RedisDistributeLock implements DistributeLock {
     /**
      * 无限重试
      * */
-    public static final int UN_LIMIT_RETRY = -1;
+    public static final int UN_LIMIT_RETRY_COUNT = -1;
 
     private RedisDistributeLock() {
         LuaScript.init();

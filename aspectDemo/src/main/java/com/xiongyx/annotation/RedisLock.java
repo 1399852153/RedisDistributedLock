@@ -16,7 +16,7 @@ public @interface RedisLock {
     /**
      * 无限重试
      * */
-    int UN_LIMIT_RETRY = RedisDistributeLock.UN_LIMIT_RETRY;
+    int unLimitRetryCount = RedisDistributeLock.UN_LIMIT_RETRY_COUNT;
 
     String lockKey();
     int expireTime();
