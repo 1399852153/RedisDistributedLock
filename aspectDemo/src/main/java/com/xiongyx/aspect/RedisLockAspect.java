@@ -39,9 +39,13 @@ public class RedisLockAspect {
         Method method = methodSignature.getMethod();
         RedisLock annotation = method.getAnnotation(RedisLock.class);
 
+        // 方法执行前，先尝试加锁
         boolean lockSuccess = lock(annotation);
+        // 如果加锁成功
         if(lockSuccess){
+            // 执行方法
             Object result = joinPoint.proceed();
+            // 方法执行后，进行解锁
             unlock(annotation);
             return result;
         }

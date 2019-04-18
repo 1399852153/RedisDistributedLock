@@ -122,17 +122,9 @@ public final class RedisDistributeLock implements DistributeLock {
 
     @Override
     public String lockAndRetry(String lockKey, int expireTime, int retryCount) {
-        for(int i=0; i<retryCount; i++){
-            String result = lock(lockKey,expireTime);
-            if(result != null){
-                return result;
-            }
+        String uuid = UUID.randomUUID().toString();
 
-            // 休眠一会
-            sleepSomeTime();
-        }
-
-        return null;
+        return lockAndRetry(lockKey,uuid,expireTime,retryCount);
     }
 
     @Override
