@@ -1,6 +1,7 @@
 package lock.script;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
@@ -58,6 +59,19 @@ public class LuaScript {
             }
 
             return stringBuilder.toString();
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        String filePath = "D:\\ids.txt";
+        try (
+            FileReader reader = new FileReader(filePath);
+            BufferedReader br = new BufferedReader(reader)
+        ) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println("'" + line + "',");
+            }
         }
     }
 }
