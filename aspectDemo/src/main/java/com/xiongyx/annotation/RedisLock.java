@@ -1,6 +1,6 @@
 package com.xiongyx.annotation;
 
-import lock.impl.RedisDistributeLock;
+import com.xiongyx.lock.impl.RedisDistributeLock;
 
 import java.lang.annotation.*;
 

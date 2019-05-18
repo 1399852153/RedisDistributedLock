@@ -1,6 +1,4 @@
-package lock.api;
-
-import org.springframework.stereotype.Component;
+package com.xiongyx.lock.api;
 
 /**
  * 分布式锁 api接口

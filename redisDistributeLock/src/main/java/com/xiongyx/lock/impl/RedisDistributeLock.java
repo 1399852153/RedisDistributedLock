@@ -1,9 +1,9 @@
-package lock.impl;
+package com.xiongyx.lock.impl;
 
-import lock.api.DistributeLock;
-import lock.script.LuaScript;
+import com.xiongyx.lock.api.DistributeLock;
+import com.xiongyx.lock.script.LuaScript;
 import org.springframework.stereotype.Component;
-import redis.RedisClient;
+import com.xiongyx.redis.RedisClient;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -12,7 +12,7 @@ import java.util.*;
  * redis 分布式锁的简单实现
  * @author xiongyx
  */
-@Component
+@Component("distributeLock")
 public final class RedisDistributeLock implements DistributeLock {
 
     /**

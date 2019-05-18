@@ -1,8 +1,7 @@
 package com.xiongyx.aspect;
 
 import com.xiongyx.annotation.RedisLock;
-import lock.api.DistributeLock;
-import lock.impl.RedisDistributeLock;
+import com.xiongyx.lock.api.DistributeLock;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;

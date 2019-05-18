@@ -1,4 +1,4 @@
-package redis;
+package com.xiongyx.redis;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
