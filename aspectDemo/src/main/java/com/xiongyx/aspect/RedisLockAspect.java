@@ -10,6 +10,7 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
@@ -28,6 +29,9 @@ public class RedisLockAspect {
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisLockAspect.class);
 
     private static final ThreadLocal<String> REQUEST_ID_MAP = new ThreadLocal<>();
+
+    @Autowired
+    private DistributeLock distributeLock;
 
     @Pointcut("@annotation(com.xiongyx.annotation.RedisLock)")
     public void annotationPointcut() {
@@ -57,8 +61,6 @@ public class RedisLockAspect {
      * 加锁
      * */
     private boolean lock(RedisLock annotation){
-        DistributeLock distributeLock = RedisDistributeLock.getInstance();
-
         int retryCount = annotation.retryCount();
 
         String requestID = REQUEST_ID_MAP.get();
@@ -90,7 +92,6 @@ public class RedisLockAspect {
      * 解锁
      * */
     private void unlock(RedisLock annotation){
-        DistributeLock distributeLock = RedisDistributeLock.getInstance();
         String requestID = REQUEST_ID_MAP.get();
         if(requestID != null){
             // 解锁成功

@@ -2,14 +2,17 @@ package lock.impl;
 
 import lock.api.DistributeLock;
 import lock.script.LuaScript;
+import org.springframework.stereotype.Component;
 import redis.RedisClient;
 
+import javax.annotation.Resource;
 import java.util.*;
 
 /**
  * redis 分布式锁的简单实现
  * @author xiongyx
  */
+@Component
 public final class RedisDistributeLock implements DistributeLock {
 
     /**
@@ -20,8 +23,6 @@ public final class RedisDistributeLock implements DistributeLock {
     private RedisDistributeLock() {
         LuaScript.init();
     }
-
-    private static DistributeLock instance = new RedisDistributeLock();
 
     /**
      * 持有锁 成功标识
@@ -54,11 +55,10 @@ public final class RedisDistributeLock implements DistributeLock {
      * */
     private static final String LOCK_COUNT_KEY_PREFIX = "lock_count:";
 
-    //===========================================api=======================================
+    @Resource
+    private RedisClient redisClient;
 
-    public static DistributeLock getInstance(){
-        return instance;
-    }
+    //===========================================api=======================================
 
     @Override
     public String lock(String lockKey) {
@@ -81,8 +81,6 @@ public final class RedisDistributeLock implements DistributeLock {
 
     @Override
     public String lock(String lockKey, String requestID, int expireTime) {
-        RedisClient redisClient = RedisClient.getInstance();
-
         List<String> keyList = Arrays.asList(
                 lockKey,
                 LOCK_COUNT_KEY_PREFIX + lockKey
@@ -170,7 +168,7 @@ public final class RedisDistributeLock implements DistributeLock {
 
         List<String> argsList = Collections.singletonList(requestID);
 
-        Object result = RedisClient.getInstance().eval(LuaScript.UN_LOCK_SCRIPT, keyList, argsList);
+        Object result = redisClient.eval(LuaScript.UN_LOCK_SCRIPT, keyList, argsList);
 
         // 释放锁成功
         return RELEASE_LOCK_SUCCESS.equals(result);
