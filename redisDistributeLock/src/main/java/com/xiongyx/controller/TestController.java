@@ -1,8 +1,10 @@
 package com.xiongyx.controller;
 
 import com.xiongyx.lock.impl.RedisDistributeLock;
+import com.xiongyx.redis.RedisClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
@@ -22,14 +24,27 @@ public class TestController {
 
     private static final String TEST_REDIS_LOCK_KEY = "lock_key";
 
-    private static final int EXPIRE_TIME = 10;
+    private static final int EXPIRE_TIME = 100;
 
     @Autowired
     private RedisDistributeLock redisDistributeLock;
 
+    @Autowired
+    private RedisClient redisClient;
+
+    @RequestMapping("/testRedis")
+    public String testRedis(@RequestParam("id") String id) {
+        String oldValue = redisClient.get("user_id");
+
+        redisClient.set("user_id",id);
+
+        String newValue = redisClient.get("user_id");
+        return newValue;
+    }
+
     @RequestMapping("/test")
     public String test() throws ExecutionException, InterruptedException {
-        int threadNum = 5;
+        int threadNum = 1;
 
         ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
 

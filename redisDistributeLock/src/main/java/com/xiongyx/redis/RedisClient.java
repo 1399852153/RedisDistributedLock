@@ -47,4 +47,12 @@ public class RedisClient {
         });
         return result;
     }
+
+    public String get(String key){
+        return (String)redisTemplate.opsForValue().get(key);
+    }
+
+    public void set(String key,String value){
+        redisTemplate.opsForValue().set(key,value);
+    }
 }
