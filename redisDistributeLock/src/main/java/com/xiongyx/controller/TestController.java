@@ -2,6 +2,8 @@ package com.xiongyx.controller;
 
 import com.xiongyx.lock.impl.RedisDistributeLock;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +16,8 @@ import java.util.concurrent.Future;
  * @author xiongyx
  * on 2019/5/18.
  */
+
+@RestController
 public class TestController {
 
     private static final String TEST_REDIS_LOCK_KEY = "lock_key";
@@ -23,6 +27,7 @@ public class TestController {
     @Autowired
     private RedisDistributeLock redisDistributeLock;
 
+    @RequestMapping("/test")
     public String test() throws ExecutionException, InterruptedException {
         int threadNum = 5;
 

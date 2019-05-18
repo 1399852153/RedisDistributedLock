@@ -3,13 +3,17 @@ package com.xiongyx.config;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.*;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.jedis.JedisClientConfiguration;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import redis.clients.jedis.JedisPoolConfig;
 
 /**
  * @author janti
@@ -18,11 +22,35 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisConfig extends CachingConfigurerSupport {
 
+    @Autowired
+    private JedisConfig jedisConfig;
+
+    @Bean
+    public JedisConnectionFactory jedisConnectionFactory (){
+        RedisStandaloneConfiguration rf = new RedisStandaloneConfiguration();
+        rf.setDatabase(jedisConfig.database);
+        rf.setHostName(jedisConfig.host);
+        rf.setPort(jedisConfig.port);
+
+        JedisClientConfiguration.JedisPoolingClientConfigurationBuilder jpb =
+                (JedisClientConfiguration.JedisPoolingClientConfigurationBuilder)JedisClientConfiguration.builder();
+
+        JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+        jedisPoolConfig.setMaxIdle(jedisConfig.maxIdle);
+        jedisPoolConfig.setMinIdle(jedisConfig.minIdle);
+        jedisPoolConfig.setMaxTotal(jedisConfig.maxActive);
+        int l=Integer.parseInt(jedisConfig.maxWait.substring(0,jedisConfig.maxWait.length()-2));
+        jedisPoolConfig.setMaxWaitMillis(l);
+        jpb.poolConfig(jedisPoolConfig);
+        JedisConnectionFactory jedisConnectionFactory = new JedisConnectionFactory(rf,jpb.build());
+        return jedisConnectionFactory;
+    }
+
     /**
      * retemplate相关配置
      */
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
+    public RedisTemplate<String, Object> redisTemplate(JedisConnectionFactory factory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
 
         // 配置连接工厂
@@ -49,45 +77,5 @@ public class RedisConfig extends CachingConfigurerSupport {
         template.afterPropertiesSet();
 
         return template;
-    }
-
-    /**
-     * 对hash类型的数据操作
-     */
-    @Bean
-    public HashOperations<String, String, Object> hashOperations(RedisTemplate<String, Object> redisTemplate) {
-        return redisTemplate.opsForHash();
-    }
-
-    /**
-     * 对redis字符串类型数据操作
-     */
-    @Bean
-    public ValueOperations<String, Object> valueOperations(RedisTemplate<String, Object> redisTemplate) {
-        return redisTemplate.opsForValue();
-    }
-
-    /**
-     * 对链表类型的数据操作
-     */
-    @Bean
-    public ListOperations<String, Object> listOperations(RedisTemplate<String, Object> redisTemplate) {
-        return redisTemplate.opsForList();
-    }
-
-    /**
-     * 对无序集合类型的数据操作
-     */
-    @Bean
-    public SetOperations<String, Object> setOperations(RedisTemplate<String, Object> redisTemplate) {
-        return redisTemplate.opsForSet();
-    }
-
-    /**
-     * 对有序集合类型的数据操作
-     */
-    @Bean
-    public ZSetOperations<String, Object> zSetOperations(RedisTemplate<String, Object> redisTemplate) {
-        return redisTemplate.opsForZSet();
     }
 }

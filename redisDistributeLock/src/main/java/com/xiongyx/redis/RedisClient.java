@@ -1,9 +1,18 @@
 package com.xiongyx.redis;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.ReturnType;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Component;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCluster;
 
 import java.util.List;
 
@@ -15,28 +24,27 @@ import java.util.List;
 public class RedisClient {
 
     @Autowired
-    private RedisTemplate<String,Object> redisTemplate;
+    private RedisTemplate redisTemplate;
 
     public Object eval(String script, List<String> keys, List<String> args) {
-        Object result = redisTemplate.execute(
-                new RedisScript<Object>() {
-                    @Override
-                    public String getSha1() {
-                        return null;
-                    }
+        DefaultRedisScript<Integer> redisScript = new DefaultRedisScript<>();
+        redisScript.setScriptText(script);
+        redisScript.setResultType(Integer.class);
 
-                    @Override
-                    public Class<Object> getResultType() {
-                        return Object.class;
-                    }
+        Object result = redisTemplate.execute((RedisCallback) redisConnection ->{
+            Object nativeConnection = redisConnection.getNativeConnection();
+            // 集群模式和单机模式虽然执行脚本的方法一样，但是没有共同的接口，所以只能分开执行
+            // 集群模式
+            if (nativeConnection instanceof JedisCluster) {
+                return (Long) ((JedisCluster) nativeConnection).eval(script, keys, args);
+            }
 
-                    @Override
-                    public String getScriptAsString() {
-                        return script;
-                    }
-                }
-        ,keys,args);
-
+            // 单机模式
+            else if (nativeConnection instanceof Jedis) {
+                return (Long) ((Jedis) nativeConnection).eval(script, keys, args);
+            }
+            return -1L;
+        });
         return result;
     }
 }
