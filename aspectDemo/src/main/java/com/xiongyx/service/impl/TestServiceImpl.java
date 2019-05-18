@@ -16,7 +16,7 @@ public class TestServiceImpl implements TestService {
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisLockAspect.class);
 
     @Override
-    @RedisLock(lockKey = "lockKey", expireTime = 100, retryCount = RedisLock.UN_LIMIT_RETRY)
+    @RedisLock(lockKey = "lockKey", expireTime = 100, retryCount = RedisLock.unLimitRetryCount)
     public String method1(String num) throws InterruptedException {
         int sleepMS = 1000;
         Thread.sleep(sleepMS);
