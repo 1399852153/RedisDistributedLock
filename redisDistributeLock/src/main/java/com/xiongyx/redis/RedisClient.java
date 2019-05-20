@@ -24,14 +24,14 @@ import java.util.List;
 public class RedisClient {
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String,Object> redisTemplate;
 
     public Object eval(String script, List<String> keys, List<String> args) {
         DefaultRedisScript<Integer> redisScript = new DefaultRedisScript<>();
         redisScript.setScriptText(script);
         redisScript.setResultType(Integer.class);
 
-        Object result = redisTemplate.execute((RedisCallback) redisConnection ->{
+        Object result = redisTemplate.execute((RedisCallback<Object>) redisConnection ->{
             Object nativeConnection = redisConnection.getNativeConnection();
             // 集群模式和单机模式虽然执行脚本的方法一样，但是没有共同的接口，所以只能分开执行
             // 集群模式

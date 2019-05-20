@@ -44,7 +44,7 @@ public class TestController {
 
     @RequestMapping("/test")
     public String test() throws ExecutionException, InterruptedException {
-        int threadNum = 1;
+        int threadNum = 5;
 
         ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
 
