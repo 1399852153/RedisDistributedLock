@@ -2,7 +2,6 @@ package com.xiongyx.aspect;
 
 import com.xiongyx.annotation.RedisLock;
 import com.xiongyx.annotation.RedisLockKey;
-import com.xiongyx.enums.RedisLockKeyType;
 import com.xiongyx.lock.api.DistributeLock;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Map;
 
 /**
  * @Author xiongyx
@@ -54,15 +54,15 @@ public class RedisLockAspect {
             // 方法执行后，进行解锁
             unlock(annotation,joinPoint);
             return result;
+        }else{
+            throw new RuntimeException("redis分布式锁加锁失败，method=" + method.getName());
         }
-
-        return null;
     }
 
     /**
      * 加锁
      * */
-    private boolean lock(RedisLock annotation,ProceedingJoinPoint joinPoint){
+    private boolean lock(RedisLock annotation,ProceedingJoinPoint joinPoint) {
         int retryCount = annotation.retryCount();
 
         String requestID = REQUEST_ID_MAP.get();
@@ -71,7 +71,7 @@ public class RedisLockAspect {
         if(requestID != null){
             // 当前线程 已经存在requestID
             distributeLock.lockAndRetry(redisLockKey,requestID,annotation.expireTime(),retryCount);
-            LOGGER.info("重入加锁成功 requestID=" + requestID);
+            LOGGER.info("重入加锁成功 redisLockKey=" + redisLockKey);
 
             return true;
         }else{
@@ -81,7 +81,7 @@ public class RedisLockAspect {
             if(newRequestID != null){
                 // 加锁成功，设置新的requestID
                 REQUEST_ID_MAP.set(newRequestID);
-                LOGGER.info("加锁成功 newRequestID=" + newRequestID);
+                LOGGER.info("加锁成功 redisLockKey=" + redisLockKey);
 
                 return true;
             }else{
@@ -95,7 +95,7 @@ public class RedisLockAspect {
     /**
      * 解锁
      * */
-    private void unlock(RedisLock annotation,ProceedingJoinPoint joinPoint){
+    private void unlock(RedisLock annotation,ProceedingJoinPoint joinPoint) {
         String requestID = REQUEST_ID_MAP.get();
         // 获取参数 拼接redisLock的key
         String redisLockKey = annotation.lockKey() + appendRedisLockKey(joinPoint);
@@ -105,7 +105,7 @@ public class RedisLockAspect {
             if(unLockSuccess){
                 // 移除 ThreadLocal中的数据
                 REQUEST_ID_MAP.remove();
-                LOGGER.info("解锁成功 requestID=" + requestID);
+                LOGGER.info("解锁成功 redisLockKey=" + redisLockKey);
             }
         }
     }
@@ -127,11 +127,12 @@ public class RedisLockAspect {
 
             for(Annotation itemAnnotation : parameterAnnotation){
                 if (itemAnnotation instanceof RedisLockKey) {
-                    switch (((RedisLockKey)itemAnnotation).type()) {
+                    RedisLockKey redisKeyLockAnnotation = (RedisLockKey)itemAnnotation;
+                    switch (redisKeyLockAnnotation.type()) {
                         case ALL:
                             return getRedisKeyByAll(arg);
                         case FIELD:
-                            // FEILD类型，当前参数直接通过toString返回
+                            return getRedisKeyByField(redisKeyLockAnnotation.expression(),arg);
                         default:
                             throw new RuntimeException("error RedisLockKey.type");
                     }
@@ -143,9 +144,54 @@ public class RedisLockAspect {
     }
 
     /**
-     * // ALL类型，当前参数直接通过toString返回
+     * ALL类型，当前参数直接通过toString返回
      * */
     private String getRedisKeyByAll(Object arg){
-        return arg.toString();
+        return ":" + arg.toString();
+    }
+
+    private String getRedisKeyByField(String expression,Object arg) {
+        String setMethodName = makeGetMethodName(expression);
+
+        try{
+            if(arg instanceof Map){
+                // map中获取key值对应的value
+                String currentArgKey = ((Map)arg).get(expression).toString();
+                if(currentArgKey == null){
+                    return "";
+                }else{
+                    return ":" + currentArgKey;
+                }
+            }else{
+                //:::获得bean中key的method对象
+                Method beanGetMethod = arg.getClass().getMethod(setMethodName);
+                //:::调用获得当前的key
+                String currentArgKey = (String) beanGetMethod.invoke(arg);
+                return ":" + currentArgKey;
+            }
+        }catch (Exception e){
+            throw new RuntimeException("getRedisKeyByField error",e);
+        }
+    }
+
+    /***
+     * 将通过keyName获得对应的bean对象的get方法名称的字符串
+     * @param keyName 属性名
+     * @return 返回get方法名称的字符串
+     */
+    private static String makeGetMethodName(String keyName) {
+        //:::将第一个字母转为大写
+        String newKeyName = transFirstCharUpperCase(keyName);
+
+        return "get" + newKeyName;
+    }
+
+    /**
+     * 将字符串的第一个字母转为大写
+     * @param str 需要被转变的字符串
+     * @return 返回转变之后的字符串
+     */
+    private static String transFirstCharUpperCase(String str) {
+        return str.replaceFirst(str.substring(0, 1), str.substring(0, 1).toUpperCase());
     }
 }

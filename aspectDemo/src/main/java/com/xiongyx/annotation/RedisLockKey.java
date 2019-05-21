@@ -9,11 +9,11 @@ import java.lang.annotation.*;
  * @date 2019/5/20
  */
 
-@Target(ElementType.METHOD)
+@Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface RedisLockKey {
     RedisLockKeyType type();
 
-    String field() default "";
+    String expression() default "";
 }
