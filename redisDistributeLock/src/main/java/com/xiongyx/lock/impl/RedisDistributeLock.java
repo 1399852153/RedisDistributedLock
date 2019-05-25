@@ -2,6 +2,8 @@ package com.xiongyx.lock.impl;
 
 import com.xiongyx.lock.api.DistributeLock;
 import com.xiongyx.lock.script.LuaScript;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import com.xiongyx.redis.RedisClient;
 
@@ -15,6 +17,8 @@ import java.util.*;
  */
 @Component("distributeLock")
 public final class RedisDistributeLock implements DistributeLock {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RedisDistributeLock.class);
 
     /**
      * 无限重试
@@ -46,20 +50,15 @@ public final class RedisDistributeLock implements DistributeLock {
     /**
      * 默认加锁重试时间 单位：毫秒
      * */
-    private static final int DEFAULT_RETRY_FIXED_TIME = 3000;
+    private static final int DEFAULT_RETRY_FIXED_TIME = 100;
     /**
      * 默认的加锁浮动时间区间 单位：毫秒
      * */
-    private static final int DEFAULT_RETRY_TIME_RANGE = 1000;
+    private static final int DEFAULT_RETRY_TIME_RANGE = 10;
     /**
      * 默认的加锁重试次数
      * */
     private static final int DEFAULT_RETRY_COUNT = 30;
-
-    /**
-     * lockCount Key前缀
-     * */
-    private static final String LOCK_COUNT_KEY_PREFIX = "lock_count:";
 
     @Resource
     private RedisClient redisClient;
@@ -143,6 +142,8 @@ public final class RedisDistributeLock implements DistributeLock {
                     return result;
                 }
 
+                LOGGER.info("加锁失败，稍后重试：lockKey={},requestID={}",lockKey,requestID);
+                redisClient.increment("retryCount",1);
                 // 休眠一会
                 sleepSomeTime();
             }

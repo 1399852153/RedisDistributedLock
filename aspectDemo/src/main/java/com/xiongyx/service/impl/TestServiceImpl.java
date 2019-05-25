@@ -15,13 +15,16 @@ import org.springframework.stereotype.Service;
 public class TestServiceImpl implements TestService {
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisLockAspect.class);
 
+    private int number = 0;
+
     @Override
     @RedisLock(lockKey = "lockKey", expireTime = 100, retryCount = RedisLock.unLimitRetryCount)
     public String method1(String num) throws InterruptedException {
-        int sleepMS = 1000;
+        int sleepMS = 3000;
         Thread.sleep(sleepMS);
+        number = number + 10;
         LOGGER.info("method1 ... 休眠{}ms num={}",sleepMS,num);
-        return "method1";
+        return "method1 " + number;
     }
 
     @Override
