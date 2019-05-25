@@ -34,9 +34,11 @@ public class TestController {
 
         String method1Result = testService.method1(num);
 
-        String method2Result = testService.method2(num);
+//        String method2Result = testService.method2(num);
 
-        LOGGER.info("请求处理完毕 num={},method1Result={},method2Result={}",num,method1Result,method2Result);
+//        LOGGER.info("请求处理完毕 num={},method1Result={},method2Result={}",num,method1Result,method2Result);
+
+        LOGGER.info("请求处理完毕 num={},method1Result={}",num,method1Result);
         return "ok";
     }
 }

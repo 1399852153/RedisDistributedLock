@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import com.xiongyx.redis.RedisClient;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -21,7 +22,12 @@ public final class RedisDistributeLock implements DistributeLock {
     public static final int UN_LIMIT_RETRY_COUNT = -1;
 
     private RedisDistributeLock() {
-        LuaScript.init();
+        try {
+            LuaScript.initLockScript();
+            LuaScript.initUnLockScript();
+        } catch (IOException e) {
+            throw new RuntimeException("LuaScript init error!",e);
+        }
     }
 
     /**
@@ -31,7 +37,7 @@ public final class RedisDistributeLock implements DistributeLock {
     /**
      * 释放锁 失败标识
      * */
-    private static final Integer RELEASE_LOCK_SUCCESS = 1;
+    private static final Long RELEASE_LOCK_SUCCESS = 1L;
 
     /**
      * 默认过期时间 单位：秒
@@ -81,10 +87,7 @@ public final class RedisDistributeLock implements DistributeLock {
 
     @Override
     public String lock(String lockKey, String requestID, int expireTime) {
-        List<String> keyList = Arrays.asList(
-                lockKey,
-                LOCK_COUNT_KEY_PREFIX + lockKey
-        );
+        List<String> keyList = Collections.singletonList(lockKey);
 
         List<String> argsList = Arrays.asList(
                 requestID,
@@ -161,10 +164,7 @@ public final class RedisDistributeLock implements DistributeLock {
 
     @Override
     public boolean unLock(String lockKey, String requestID) {
-        List<String> keyList = Arrays.asList(
-                lockKey,
-                LOCK_COUNT_KEY_PREFIX + lockKey
-        );
+        List<String> keyList = Collections.singletonList(lockKey);
 
         List<String> argsList = Collections.singletonList(requestID);
 
