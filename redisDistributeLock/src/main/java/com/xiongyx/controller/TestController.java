@@ -34,11 +34,11 @@ public class TestController {
 
     @RequestMapping("/testRedis")
     public String testRedis(@RequestParam("id") String id) {
-        String oldValue = redisClient.get("user_id");
+        String oldValue = (String)redisClient.get("user_id");
 
         redisClient.set("user_id",id);
 
-        String newValue = redisClient.get("user_id");
+        String newValue = (String)redisClient.get("user_id");
         return newValue;
     }
 
