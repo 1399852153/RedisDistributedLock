@@ -18,8 +18,8 @@ import redis.clients.jedis.JedisPoolConfig;
 import java.time.Duration;
 
 /**
- * @author janti
- * reids 相关bean的配置
+ * @author xiongyx
+ * redis 相关配置
  */
 @Configuration
 public class RedisConfig extends CachingConfigurerSupport {
