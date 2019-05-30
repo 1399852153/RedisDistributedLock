@@ -2,6 +2,7 @@ package com.xiongyx.aspect;
 
 import com.xiongyx.annotation.RedisLock;
 import com.xiongyx.constants.RedisConstants;
+import com.xiongyx.exception.RedisLockFailException;
 import com.xiongyx.lock.api.DistributeLock;
 import com.xiongyx.util.RedisLockKeyUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -57,7 +58,7 @@ public class RedisLockAspect {
             unlock(annotation,joinPoint);
             return result;
         }else{
-            throw new RuntimeException("redis分布式锁加锁失败，method= " + method.getName());
+            throw new RedisLockFailException("redis分布式锁加锁失败，method= " + method.getName());
         }
     }
 

@@ -15,6 +15,8 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import redis.clients.jedis.JedisPoolConfig;
 
+import java.time.Duration;
+
 /**
  * @author janti
  * reids 相关bean的配置
@@ -27,23 +29,28 @@ public class RedisConfig extends CachingConfigurerSupport {
 
     @Bean
     public JedisConnectionFactory jedisConnectionFactory (){
-        RedisStandaloneConfiguration rf = new RedisStandaloneConfiguration();
-        rf.setDatabase(jedisConfig.database);
-        rf.setHostName(jedisConfig.host);
-        rf.setPort(jedisConfig.port);
+        JedisPoolConfig poolConfig = new JedisPoolConfig();
+        poolConfig.setMaxTotal(jedisConfig.getMaxActive());
+        poolConfig.setMaxIdle(jedisConfig.getMaxIdle());
+        int maxWait = Integer.parseInt(jedisConfig.getMaxWait().substring(0,jedisConfig.maxWait.length()-2));
+        poolConfig.setMaxWaitMillis(maxWait);
+        poolConfig.setMinIdle(jedisConfig.getMaxIdle());
+        poolConfig.setTestOnBorrow(true);
+        poolConfig.setTestOnReturn(false);
+        poolConfig.setTestWhileIdle(true);
 
-        JedisClientConfiguration.JedisPoolingClientConfigurationBuilder jpb =
-                (JedisClientConfiguration.JedisPoolingClientConfigurationBuilder)JedisClientConfiguration.builder();
+        int readTimeout = Integer.parseInt(jedisConfig.getTimeout().substring(0,jedisConfig.maxWait.length()-2));
+        // 使用jedis连接池
+        JedisClientConfiguration jedisClientConfiguration = JedisClientConfiguration.builder()
+            .usePooling().poolConfig(poolConfig)
+            .and().readTimeout(Duration.ofMillis(readTimeout)).build();
 
-        JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
-        jedisPoolConfig.setMaxIdle(jedisConfig.maxIdle);
-        jedisPoolConfig.setMinIdle(jedisConfig.minIdle);
-        jedisPoolConfig.setMaxTotal(jedisConfig.maxActive);
-        int l=Integer.parseInt(jedisConfig.maxWait.substring(0,jedisConfig.maxWait.length()-2));
-        jedisPoolConfig.setMaxWaitMillis(l);
-        jpb.poolConfig(jedisPoolConfig);
-        JedisConnectionFactory jedisConnectionFactory = new JedisConnectionFactory(rf,jpb.build());
-        return jedisConnectionFactory;
+        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
+        redisStandaloneConfiguration.setDatabase(jedisConfig.getDatabase());
+        redisStandaloneConfiguration.setPort(jedisConfig.getPort());
+        redisStandaloneConfiguration.setHostName(jedisConfig.getHost());
+
+        return new JedisConnectionFactory(redisStandaloneConfiguration, jedisClientConfiguration);
     }
 
     /**

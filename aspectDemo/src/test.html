@@ -7,7 +7,6 @@
 
 <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>
 <script>
-    debugger;
     let concurrentNum = 100;
     for(let i=0; i<concurrentNum; i++){
         console.log('发送请求 i=' + i);
@@ -16,7 +15,7 @@
 
     function requestTest(i){
         $.ajax({
-            url : "http://localhost:9998/test",
+            url : "http://localhost:8081/test/redis/testEntity",
             dataType : 'JSON',
             data : {
                 num : i
