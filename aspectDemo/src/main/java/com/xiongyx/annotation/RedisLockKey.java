@@ -13,6 +13,9 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface RedisLockKey {
+
+    String expressionKeySeparator = ",";
+
     RedisLockKeyType type();
 
     String expression() default "";

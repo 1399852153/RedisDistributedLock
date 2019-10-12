@@ -3,6 +3,7 @@ package com.xiongyx.util;
 import com.xiongyx.annotation.RedisLock;
 import com.xiongyx.annotation.RedisLockKey;
 import com.xiongyx.constants.RedisConstants;
+import io.netty.util.internal.StringUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.util.StringUtils;
@@ -88,28 +89,42 @@ public class RedisLockKeyUtil {
     }
 
     private static String getRedisKeyByField(String expression,Object arg) {
-        String setMethodName = makeGetMethodName(expression);
-
-        try{
-            String currentArgKey;
-            if(arg instanceof Map){
-                // map中获取key值对应的value
-                Object field = ((Map)arg).get(expression);
-                currentArgKey = getFieldKey(field);
-
-                return currentArgKey;
-            }else{
-                //:::获得bean中key的method对象
-                Method beanGetMethod = arg.getClass().getMethod(setMethodName);
-                //:::调用获得当前的key
-                Object field = beanGetMethod.invoke(arg);
-                currentArgKey = getFieldKey(field);
-
-                return currentArgKey;
-            }
-        }catch (Exception e){
-            throw new RuntimeException("getRedisKeyByField error",e);
+        if(StringUtils.isEmpty(expression)){
+            return StringUtil.EMPTY_STRING;
         }
+
+        // 按照","分割
+        String[] keyNameList = expression.split(RedisLockKey.expressionKeySeparator);
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for(String keyNameItem : keyNameList){
+            String setMethodName = makeGetMethodName(keyNameItem);
+
+            try{
+                String currentArgKey;
+                if(arg instanceof Map){
+                    // map中获取key值对应的value
+                    Object field = ((Map)arg).get(keyNameItem);
+                    currentArgKey = getFieldKey(field);
+
+                    stringBuilder.append(currentArgKey).append(RedisLockKey.expressionKeySeparator);
+                }else{
+                    //:::获得bean中key的method对象
+                    Method beanGetMethod = arg.getClass().getMethod(setMethodName);
+                    //:::调用获得当前的key
+                    Object field = beanGetMethod.invoke(arg);
+                    currentArgKey = getFieldKey(field);
+
+                    stringBuilder.append(currentArgKey).append(RedisLockKey.expressionKeySeparator);
+                }
+            }catch (Exception e){
+                throw new RuntimeException("getRedisKeyByField error",e);
+            }
+        }
+
+        // 删除掉最后一位分隔符
+        stringBuilder.deleteCharAt(stringBuilder.length()-1);
+        return stringBuilder.toString();
     }
 
     /**
