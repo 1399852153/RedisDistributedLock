@@ -147,7 +147,7 @@ public class RedisLockAspect {
             // 解锁成功
             boolean unLockSuccess = distributeLock.unLock(redisLockKey,requestID);
             if(unLockSuccess){
-                // 移除 ThreadLocal中的数据
+                // 移除 ThreadLocal中的数据，防止内存泄漏
                 REQUEST_ID_MAP.removeRequestID(redisLockKey);
                 LOGGER.info("解锁成功 redisLockKey= " + redisLockKey);
             }
