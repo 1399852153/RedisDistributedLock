@@ -8,5 +8,4 @@ public interface TestService {
 
     String method1(String num) throws InterruptedException;
 
-    String method2(String num) throws InterruptedException;
 }

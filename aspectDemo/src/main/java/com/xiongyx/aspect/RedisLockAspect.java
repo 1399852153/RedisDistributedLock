@@ -17,6 +17,8 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @Author xiongyx
@@ -31,7 +33,46 @@ public class RedisLockAspect {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisLockAspect.class);
 
-    private static final ThreadLocal<String> REQUEST_ID_MAP = new ThreadLocal<>();
+    private final RequestIDMap REQUEST_ID_MAP = new RequestIDMap();
+
+    /**
+     * 将ThreadLocal包装成一个对象方便使用
+     * */
+    private class RequestIDMap{
+        private ThreadLocal<Map<String,String>> innerThreadLocal = new ThreadLocal<>();
+
+        private void setRequestID(String redisLockKey,String requestID){
+            Map<String,String> requestIDMap = innerThreadLocal.get();
+            if(requestIDMap == null){
+                Map<String,String> newMap = new HashMap<>();
+                newMap.put(redisLockKey,requestID);
+                innerThreadLocal.set(newMap);
+            }else{
+                requestIDMap.put(redisLockKey,requestID);
+            }
+        }
+
+        private String getRequestID(String redisLockKey){
+            Map<String,String> requestIDMap = innerThreadLocal.get();
+            if(requestIDMap == null){
+                return null;
+            }else{
+                return requestIDMap.get(redisLockKey);
+            }
+        }
+
+        private void removeRequestID(String redisLockKey){
+            Map<String,String> requestIDMap = innerThreadLocal.get();
+            if(requestIDMap != null){
+                requestIDMap.remove(redisLockKey);
+                // 如果requestIDMap为空，说明当前重入锁 最外层已经解锁
+                if(requestIDMap.isEmpty()){
+                    // 清空threadLocal避免内存泄露
+                    innerThreadLocal.remove();
+                }
+            }
+        }
+    }
 
     @Autowired
     private Environment environment;
@@ -68,9 +109,9 @@ public class RedisLockAspect {
     private boolean lock(RedisLock annotation,ProceedingJoinPoint joinPoint) {
         int retryCount = annotation.retryCount();
 
-        String requestID = REQUEST_ID_MAP.get();
         // 拼接redisLock的key
         String redisLockKey = getFinallyKeyLock(annotation,joinPoint);
+        String requestID = REQUEST_ID_MAP.getRequestID(redisLockKey);
         if(requestID != null){
             // 当前线程 已经存在requestID
             distributeLock.lockAndRetry(redisLockKey,requestID,annotation.expireTime(),retryCount);
@@ -83,7 +124,7 @@ public class RedisLockAspect {
 
             if(newRequestID != null){
                 // 加锁成功，设置新的requestID
-                REQUEST_ID_MAP.set(newRequestID);
+                REQUEST_ID_MAP.setRequestID(redisLockKey,newRequestID);
                 LOGGER.info("加锁成功 redisLockKey= " + redisLockKey);
 
                 return true;
@@ -99,17 +140,19 @@ public class RedisLockAspect {
      * 解锁
      * */
     private void unlock(RedisLock annotation,ProceedingJoinPoint joinPoint) {
-        String requestID = REQUEST_ID_MAP.get();
         // 拼接redisLock的key
         String redisLockKey = getFinallyKeyLock(annotation,joinPoint);
+        String requestID = REQUEST_ID_MAP.getRequestID(redisLockKey);
         if(requestID != null){
             // 解锁成功
             boolean unLockSuccess = distributeLock.unLock(redisLockKey,requestID);
             if(unLockSuccess){
                 // 移除 ThreadLocal中的数据
-                REQUEST_ID_MAP.remove();
+                REQUEST_ID_MAP.removeRequestID(redisLockKey);
                 LOGGER.info("解锁成功 redisLockKey= " + redisLockKey);
             }
+        }else{
+            LOGGER.info("解锁失败 redisLockKey= " + redisLockKey);
         }
     }
 

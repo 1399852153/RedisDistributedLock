@@ -6,9 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -16,7 +14,6 @@ import javax.servlet.http.HttpServletRequest;
  * @Author xiongyx
  * on 2019/4/12.
  */
-@CrossOrigin
 @Controller
 public class TestController {
 
@@ -26,19 +23,29 @@ public class TestController {
     @Autowired
     private TestService testService;
 
-    @RequestMapping("/test")
+    @RequestMapping("/test/{abc}/bcd")
     @ResponseBody
-    public String test(HttpServletRequest request) throws InterruptedException {
-        String num = request.getParameter("num");
-        LOGGER.info("接收到请求 num=" + num);
+    public String test1(@PathVariable("abc") String abc) throws InterruptedException {
+        LOGGER.info("接收到请求 " + abc);
 
-        String method1Result = testService.method1(num);
+        testService.method1(abc);
 
-//        String method2Result = testService.method2(num);
+        return "ok";
+    }
 
-//        LOGGER.info("请求处理完毕 num={},method1Result={},method2Result={}",num,method1Result,method2Result);
+    @RequestMapping("/test/{abc}/efg")
+    @ResponseBody
+    public String test2(@PathVariable("abc") String abc) throws InterruptedException {
+        LOGGER.info("接收到请求 " + abc);
 
-        LOGGER.info("请求处理完毕 num={},method1Result={}",num,method1Result);
+        return "ok";
+    }
+
+    @RequestMapping("/test/efg")
+    @ResponseBody
+    public String test3(@RequestParam String abc) throws InterruptedException {
+        LOGGER.info("接收到请求 " + abc);
+
         return "ok";
     }
 }
