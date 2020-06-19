@@ -1,5 +1,6 @@
 package com.xiongyx.controller;
 
+import com.xiongyx.TestService;
 import com.xiongyx.lock.impl.RedisDistributeLock;
 import com.xiongyx.redis.RedisClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -26,11 +28,14 @@ public class TestController {
 
     private static final int EXPIRE_TIME = 100;
 
+    @Resource
+    private TestService testService;
     @Autowired
     private RedisDistributeLock redisDistributeLock;
 
     @Autowired
     private RedisClient redisClient;
+
 
     @RequestMapping("/testRedis")
     public String testRedis(@RequestParam("id") String id) {
@@ -84,6 +89,21 @@ public class TestController {
             future.get();
         }
 
+        return "ok";
+    }
+
+
+    @RequestMapping("/testLock")
+    public String testLock(Integer threadNum) throws ExecutionException, InterruptedException {
+        ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
+
+        List<Future> futureList = new ArrayList<>();
+        for (int i = 0; i < threadNum; i++) {
+            int currentThreadNum = i;
+            executorService.execute(() -> {
+                testService.exeTask(currentThreadNum);
+            });
+        }
         return "ok";
     }
 }
