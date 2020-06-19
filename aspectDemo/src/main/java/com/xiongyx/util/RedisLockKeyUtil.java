@@ -126,9 +126,9 @@ public class RedisLockKeyUtil {
 
                     stringBuilder.append(currentArgKey).append(RedisLockKey.expressionKeySeparator);
                 }else{
-                    //:::获得bean中key的method对象
+                    // 获得bean中key的method对象
                     Method beanGetMethod = arg.getClass().getMethod(setMethodName);
-                    //:::调用获得当前的key
+                    // 调用获得当前的key
                     Object field = beanGetMethod.invoke(arg);
                     currentArgKey = getFieldKey(field);
 
@@ -165,7 +165,7 @@ public class RedisLockKeyUtil {
      * @return 返回get方法名称的字符串
      */
     private static String makeGetMethodName(String keyName) {
-        //:::将第一个字母转为大写
+        // 将第一个字母转为大写
         String newKeyName = transFirstCharUpperCase(keyName);
 
         return "get" + newKeyName;
