@@ -1,6 +1,6 @@
 package com.xiongyx.controller;
 
-import com.xiongyx.TestService;
+import com.xiongyx.TestServiceA;
 import com.xiongyx.lock.impl.RedisDistributeLock;
 import com.xiongyx.redis.RedisClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,7 @@ public class TestController {
     private static final int EXPIRE_TIME = 100;
 
     @Resource
-    private TestService testService;
+    private TestServiceA testServiceA;
     @Autowired
     private RedisDistributeLock redisDistributeLock;
 
@@ -101,7 +101,7 @@ public class TestController {
         for (int i = 0; i < threadNum; i++) {
             int currentThreadNum = i;
             executorService.execute(() -> {
-                testService.exeTask(currentThreadNum);
+                testServiceA.exeTask(currentThreadNum);
             });
         }
         return "ok";

@@ -20,8 +20,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version 1.0
  */
 @Service
-public class TestService {
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(TestService.class);
+public class TestServiceA {
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(TestServiceA.class);
 
     @Resource
     private RedisDistributeLock redisDistributeLock;
@@ -44,12 +44,12 @@ public class TestService {
 
     @PostConstruct
     public void monitor() {
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate((Runnable) () -> {
-
-            int qps = count.getAndSet(0);
-            LOGGER.info("qps = {}", qps);
-
-        }, 0, 1, TimeUnit.SECONDS);
+//        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate((Runnable) () -> {
+//
+//            int qps = count.getAndSet(0);
+//            LOGGER.info("qps = {}", qps);
+//
+//        }, 0, 1, TimeUnit.SECONDS);
 
     }
 
