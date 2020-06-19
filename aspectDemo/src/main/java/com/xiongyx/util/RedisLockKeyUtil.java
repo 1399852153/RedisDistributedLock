@@ -6,6 +6,8 @@ import com.xiongyx.constants.RedisConstants;
 import io.netty.util.internal.StringUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
@@ -18,11 +20,17 @@ import java.util.Map;
  */
 public class RedisLockKeyUtil {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(RedisLockKeyUtil.class);
+
     /**
      * 拼接redis最终的key
      * */
-    public static String getFinallyLockKey(RedisLock annotation, ProceedingJoinPoint proceedingJoinPoint){
+    public static String getFinallyLockKey(String applicationName, RedisLock annotation, ProceedingJoinPoint proceedingJoinPoint){
         StringBuilder keyStringBuilder = new StringBuilder();
+
+        // 拼接所在应用名字
+        keyStringBuilder.append(applicationName)
+                .append(RedisConstants.KEY_SEPARATOR);
 
         // 拼接当前方法所在类名
         String className = proceedingJoinPoint.getTarget().getClass().getSimpleName();
@@ -35,8 +43,10 @@ public class RedisLockKeyUtil {
             .append(RedisConstants.KEY_SEPARATOR);
 
         // 拼接注解中的key
-        keyStringBuilder.append(annotation.lockKey())
-            .append(RedisConstants.KEY_SEPARATOR);
+        if(!StringUtils.isEmpty(annotation.lockKey())){
+            keyStringBuilder.append(annotation.lockKey())
+                    .append(RedisConstants.KEY_SEPARATOR);
+        }
 
         // 拼接注解参数中的值
         String paramKey = getRedisLockKeyFormParam(proceedingJoinPoint);
@@ -64,6 +74,13 @@ public class RedisLockKeyUtil {
 
             for(Annotation itemAnnotation : parameterAnnotation){
                 if (itemAnnotation instanceof RedisLockKey) {
+                    if(arg == null){
+                        // 参数为空时警告
+                        String methodName = proceedingJoinPoint.getSignature().getName();
+                        LOGGER.warn("redisLock arg is null methodName=" + methodName);
+                        return "";
+                    }
+
                     RedisLockKey redisKeyLockAnnotation = (RedisLockKey)itemAnnotation;
                     switch (redisKeyLockAnnotation.type()) {
                         case ALL:

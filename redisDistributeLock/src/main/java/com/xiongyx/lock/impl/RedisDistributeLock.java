@@ -18,8 +18,6 @@ import java.util.*;
 @Component("distributeLock")
 public final class RedisDistributeLock implements DistributeLock {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RedisDistributeLock.class);
-
     /**
      * 无限重试
      * */
@@ -142,8 +140,6 @@ public final class RedisDistributeLock implements DistributeLock {
                     return result;
                 }
 
-                LOGGER.info("加锁失败，稍后重试：lockKey={},requestID={}",lockKey,requestID);
-                redisClient.increment("retryCount",1);
                 // 休眠一会
                 sleepSomeTime();
             }
@@ -188,7 +184,7 @@ public final class RedisDistributeLock implements DistributeLock {
     }
 
     /**
-     * 当前线程 休眠一端时间
+     * 当前线程 休眠一段时间
      * */
     private void sleepSomeTime(){
         // 重试时间 单位：毫秒

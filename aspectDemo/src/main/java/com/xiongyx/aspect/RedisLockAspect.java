@@ -33,6 +33,7 @@ public class RedisLockAspect {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisLockAspect.class);
 
+    private static final String LOCK_KEY_SIGN = "redisLock:";
     private final RequestIDMap REQUEST_ID_MAP = new RequestIDMap();
 
     /**
@@ -94,10 +95,19 @@ public class RedisLockAspect {
         // 如果加锁成功
         if(lockSuccess){
             // 执行方法
-            Object result = joinPoint.proceed();
-            // 方法执行后，进行解锁
-            unlock(annotation,joinPoint);
-            return result;
+            try {
+                Object result = joinPoint.proceed();
+                // 方法执行后，进行解锁
+                unlock(annotation,joinPoint);
+                return result;
+            } catch (Throwable throwable) {
+                // catch异常，进行解锁
+
+                LOGGER.info("发生异常,解锁");
+                unlock(annotation,joinPoint);
+                throw throwable;
+            }
+
         }else{
             throw new RedisLockFailException("redis分布式锁加锁失败，method= " + method.getName());
         }
@@ -115,7 +125,7 @@ public class RedisLockAspect {
         if(requestID != null){
             // 当前线程 已经存在requestID
             distributeLock.lockAndRetry(redisLockKey,requestID,annotation.expireTime(),retryCount);
-            LOGGER.info("重入加锁成功 redisLockKey= " + redisLockKey);
+            LOGGER.info("重入加锁成功 redisLockKey=" + redisLockKey);
 
             return true;
         }else{
@@ -125,7 +135,7 @@ public class RedisLockAspect {
             if(newRequestID != null){
                 // 加锁成功，设置新的requestID
                 REQUEST_ID_MAP.setRequestID(redisLockKey,newRequestID);
-                LOGGER.info("加锁成功 redisLockKey= " + redisLockKey);
+                LOGGER.info("加锁成功 redisLockKey=" + redisLockKey);
 
                 return true;
             }else{
@@ -166,12 +176,13 @@ public class RedisLockAspect {
         }
 
         // applicationName在前
-        String finallyKey = applicationName + RedisConstants.KEY_SEPARATOR  + RedisLockKeyUtil.getFinallyLockKey(annotation,joinPoint);
+        String finallyKey = RedisLockKeyUtil.getFinallyLockKey(applicationName,annotation,
+                joinPoint);
 
         if (finallyKey.length() > RedisConstants.FINALLY_KEY_LIMIT) {
             throw new RuntimeException("finallyLockKey is too long finallyKey=" + finallyKey);
         }else{
-            return finallyKey;
+            return LOCK_KEY_SIGN + finallyKey;
         }
     }
 }
